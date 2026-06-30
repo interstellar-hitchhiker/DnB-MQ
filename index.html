@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neuro Bloom Chamber</title>
+  <style>
+    :root{
+      --bg:#02040a;--panel:rgba(7,11,20,.76);--panel2:rgba(12,18,31,.92);--text:#eef7ff;--muted:#9fb1c8;--faint:#64758d;--line:rgba(255,255,255,.14);--cyan:#64eaff;--violet:#b58cff;--acid:#b9ff69;--pink:#ff70ca;--danger:#ff718d;--shadow:rgba(0,0,0,.56);--radius:24px
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden;background:#000;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+    button,input,select{font:inherit;color:inherit}
+    button{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.045));padding:11px 14px;cursor:pointer;box-shadow:0 16px 38px rgba(0,0,0,.22);transition:transform .14s ease,border-color .14s ease,background .14s ease,opacity .14s ease}
+    button:hover{transform:translateY(-1px);border-color:rgba(100,234,255,.62);background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06))}
+    button:active{transform:translateY(1px)}
+    button.primary{background:linear-gradient(180deg,rgba(100,234,255,.28),rgba(79,94,255,.16));border-color:rgba(100,234,255,.50)}
+    button.soft{background:linear-gradient(180deg,rgba(185,255,105,.19),rgba(100,234,255,.08));border-color:rgba(185,255,105,.34)}
+    button.danger{background:linear-gradient(180deg,rgba(255,113,141,.20),rgba(255,113,141,.08));border-color:rgba(255,113,141,.42)}
+    button.small{padding:8px 10px;border-radius:11px;font-size:13px}
+    button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    select,input[type="text"],input[type="number"]{width:100%;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.28);padding:10px 11px;outline:none}
+    input[type="range"]{width:100%;accent-color:var(--cyan)}
+    input[type="file"]{width:100%;font-size:12px;color:var(--muted)}
+    #app{position:fixed;inset:0;background:#000}
+    canvas{display:block;touch-action:none}
+    #home{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:24px;pointer-events:none;background:
+      radial-gradient(circle at 28% 20%,rgba(100,234,255,.20),transparent 30%),
+      radial-gradient(circle at 75% 30%,rgba(181,140,255,.18),transparent 34%),
+      radial-gradient(circle at 50% 83%,rgba(185,255,105,.10),transparent 35%),
+      linear-gradient(135deg,rgba(2,4,10,.95),rgba(8,10,18,.62) 46%,rgba(0,0,0,.86));transition:opacity .35s ease,visibility .35s ease}
+    #home.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    #home::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.024) 1px,transparent 1px);background-size:54px 54px;mask-image:radial-gradient(circle at 50% 42%,black,transparent 78%);pointer-events:none}
+    .shell{position:relative;pointer-events:auto;width:min(1120px,100%);display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:18px;align-items:stretch}
+    .hero,.panel{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:var(--radius);box-shadow:0 28px 90px var(--shadow)}
+    .hero{min-height:590px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
+    .hero::after{content:"";position:absolute;right:-150px;top:-150px;width:430px;height:430px;border-radius:50%;border:1px solid rgba(100,234,255,.20);box-shadow:0 0 120px rgba(100,234,255,.16),inset 0 0 140px rgba(185,255,105,.05)}
+    .eyebrow{margin:0 0 12px;color:var(--acid);font-weight:800;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+    h1{position:relative;margin:0;max-width:720px;font-size:clamp(46px,8vw,96px);line-height:.88;letter-spacing:-.075em;text-wrap:balance}
+    .subtitle{position:relative;margin:18px 0 0;max-width:720px;color:var(--muted);font-size:17px;line-height:1.55;text-wrap:balance}
+    .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+    .pill{border:1px solid rgba(255,255,255,.13);background:rgba(0,0,0,.22);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px}
+    .big-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;max-width:560px}
+    .panel{padding:18px;display:grid;gap:14px;align-content:start}
+    .panel h2{margin:0;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+    .field{display:grid;gap:7px}
+    label{font-size:12px;color:var(--muted)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .status{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.24);padding:11px;color:var(--muted);font-size:13px;line-height:1.45;min-height:88px;white-space:pre-wrap}
+    .meter{height:9px;margin-top:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.meter span{display:block;height:100%;width:7%;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--acid));box-shadow:0 0 24px rgba(100,234,255,.7);transition:width .08s linear}
+    .hint{color:var(--faint);font-size:12px;line-height:1.45;margin:0}.value{float:right;color:var(--text);font-variant-numeric:tabular-nums}
+    #enterVR{width:100%;background:linear-gradient(180deg,rgba(100,234,255,.30),rgba(181,140,255,.18));border-color:rgba(100,234,255,.56);font-weight:800}
+    #hud{position:fixed;z-index:8;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none;transition:opacity .25s ease}#hud.hidden{opacity:0}
+    .mini{pointer-events:auto;border:1px solid var(--line);background:rgba(5,8,14,.58);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 18px 60px rgba(0,0,0,.38);border-radius:18px;padding:11px 12px;color:var(--muted);font-size:12px;line-height:1.4;max-width:min(520px,calc(100vw - 32px))}.mini strong{display:block;color:var(--text);font-size:14px;margin-bottom:2px}
+    .hud-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;pointer-events:auto}
+    #toast{position:fixed;left:50%;top:50%;z-index:20;transform:translate(-50%,-50%);border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.62);box-shadow:0 20px 90px rgba(0,0,0,.52);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:13px 17px;color:var(--muted);font-size:13px;opacity:0;pointer-events:none;transition:opacity .22s ease}#toast.show{opacity:1}
+    #fatal{display:none;position:fixed;z-index:30;left:16px;right:16px;bottom:16px;border:1px solid rgba(255,113,141,.4);background:rgba(20,5,10,.86);border-radius:16px;padding:12px;color:#ffd7df;font-size:13px;line-height:1.45}
+    @media(max-width:920px){.shell{grid-template-columns:1fr}.hero{min-height:auto}.panel{max-height:48vh;overflow:auto}.big-actions{grid-template-columns:1fr}}
+    @media(max-width:640px){#home{padding:12px}.hero{padding:24px}h1{font-size:clamp(42px,14vw,72px)}.subtitle{font-size:15px}.row{grid-template-columns:1fr}.hud-buttons{display:none}.mini{font-size:11px}}
+  </style>
+</head>
+<body>
+  <div id="app" aria-label="Neuro Bloom Chamber 3D scene"></div>
+
+  <section id="home" aria-label="Start screen">
+    <div class="shell">
+      <main class="hero">
+        <div>
+          <p class="eyebrow">Seated WebXR audio sculpture</p>
+          <h1>Neuro Bloom Chamber</h1>
+          <p class="subtitle">A dark luminous VR chamber where one fractal bloom breathes with drum and bass: bass opens the form, mids bend the ribbons, highs release sparks.</p>
+          <div class="pill-row"><span class="pill">Meta Quest Browser</span><span class="pill">desktop fallback</span><span class="pill">local audio safest</span><span class="pill">radio stream</span><span class="pill">audible synth fallback</span></div>
+          <div class="big-actions"><button id="playBtn" class="primary">Play audio</button><button id="focusBtn" class="soft">Hide home view</button></div>
+        </div>
+        <p class="hint">On desktop, drag to orbit and use the controls. On Quest, publish through GitHub Pages and open the HTTPS URL in Meta Quest Browser. Local files give true frequency analysis; radio streams usually play but may block deep analysis, so the chamber follows a DnB pulse estimate.</p>
+      </main>
+      <aside class="panel" aria-label="Audio and visual controls">
+        <h2>Controls</h2>
+        <button id="enterVR" class="primary">Enter VR</button>
+        <div class="row"><button id="stopBtn" class="small">Stop</button><button id="resetBtn" class="small">Reset view</button></div>
+        <div class="field"><label for="sourceSelect">Audio source</label><select id="sourceSelect"><option value="radio" selected>Bassdrive radio stream</option><option value="local">Local audio file</option><option value="synth">Generated DnB pulse synth</option><option value="custom">Custom stream URL</option></select></div>
+        <div class="field" id="customWrap" style="display:none"><label for="customUrl">Custom stream URL</label><input id="customUrl" type="text" value="https://bassdrive.radioca.st/;stream.mp3" spellcheck="false" /></div>
+        <div class="field" id="fileWrap" style="display:none"><label for="fileInput">Local audio file</label><input id="fileInput" type="file" accept="audio/*" /></div>
+        <div class="field"><label for="volume">Volume <span class="value" id="volumeVal">65%</span></label><input id="volume" type="range" min="0" max="100" value="65" /></div>
+        <div class="field"><label for="drive">Calm / drive <span class="value" id="driveVal">54</span></label><input id="drive" type="range" min="0" max="100" value="54" /></div>
+        <div class="field"><label for="brightness">Brightness <span class="value" id="brightnessVal">62</span></label><input id="brightness" type="range" min="15" max="100" value="62" /></div>
+        <div class="field"><label for="bpm">Pulse BPM</label><input id="bpm" type="number" min="80" max="220" value="174" /></div>
+        <div class="status" id="status">Loading scene...
+          <div class="meter"><span id="meterBar"></span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="hud"><div class="mini"><strong>Neuro Bloom Chamber</strong><span id="modeLine">Loading...</span></div><div class="hud-buttons"><button id="showHomeBtn" class="small">Home</button><button id="pauseBtn" class="small">Pause</button><button id="resetViewBtn" class="small">Reset view</button></div></div>
+  <div id="toast">Ready</div><div id="fatal"></div>
+  <audio id="radioAudio" preload="none" crossorigin="anonymous"></audio>
+  <audio id="localAudio" preload="none"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script>
+  (function(){
+    'use strict';
+
+    const RADIO_URLS = [
+      'https://bassdrive.radioca.st/;stream.mp3',
+      'https://bassdrive.radioca.st/stream'
+    ];
+
+    const $ = id => document.getElementById(id);
+    const els = {
+      app:$('app'), home:$('home'), playBtn:$('playBtn'), pauseBtn:$('pauseBtn'), stopBtn:$('stopBtn'), resetBtn:$('resetBtn'), resetViewBtn:$('resetViewBtn'), showHomeBtn:$('showHomeBtn'), focusBtn:$('focusBtn'), enterVR:$('enterVR'), sourceSelect:$('sourceSelect'), customWrap:$('customWrap'), customUrl:$('customUrl'), fileWrap:$('fileWrap'), fileInput:$('fileInput'), volume:$('volume'), volumeVal:$('volumeVal'), drive:$('drive'), driveVal:$('driveVal'), brightness:$('brightness'), brightnessVal:$('brightnessVal'), bpm:$('bpm'), status:$('status'), meterBar:$('meterBar'), modeLine:$('modeLine'), toast:$('toast'), fatal:$('fatal'), radioAudio:$('radioAudio'), localAudio:$('localAudio'), hud:$('hud')
+    };
+
+    const state = {
+      drive:.54, brightness:.62, pulse:{bass:.2,mid:.16,high:.13,level:.16,beat:0}, analyserValid:false, audioCtx:null, analyser:null, freqData:null, sourceNode:null, localObjectUrl:null, synth:null, radioIndex:0, playing:false, homeVisible:true, xrActive:false, pointer:{down:false,lastX:0,lastY:0,yaw:0,pitch:0,distance:4.25}, surge:0, lastUi:0, sceneReady:false
+    };
+
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+    function lerp(a,b,t){ return a+(b-a)*t; }
+    function status(text){ els.status.childNodes[0].nodeValue = text + '\n'; els.modeLine.textContent = text; }
+    function toast(text){ els.toast.textContent = text; els.toast.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>els.toast.classList.remove('show'),1100); }
+    function hideHome(){ state.homeVisible=false; els.home.classList.add('hidden'); els.hud.classList.remove('hidden'); }
+    function showHome(){ state.homeVisible=true; els.home.classList.remove('hidden'); els.hud.classList.add('hidden'); }
+    function volume(){ return Number(els.volume.value)/100; }
+
+    let renderer, scene, camera, world, chamber, bloom, ribbons, halo, mist, core, floor, controllers=[];
+    let lastTime = performance.now();
+    let palette = {};
+
+    function initScene(){
+      if(!window.THREE){
+        els.enterVR.disabled = true;
+        els.enterVR.textContent = '3D engine did not load';
+        els.fatal.style.display = 'block';
+        els.fatal.textContent = 'Three.js did not load from the CDN. Check internet access, then reload. Audio buttons still work.';
+        status('3D engine failed to load. Audio controls are still available.');
+        return;
+      }
+
+      palette = { cyan:new THREE.Color(0x64eaff), violet:new THREE.Color(0xb58cff), acid:new THREE.Color(0xb9ff69), pink:new THREE.Color(0xff70ca), amber:new THREE.Color(0xffc66e), white:new THREE.Color(0xf5fbff) };
+      scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000); scene.fog = new THREE.FogExp2(0x030714, .055);
+      camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, .03, 90); camera.position.set(0,1.58,4.25);
+      renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+      renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35)); renderer.setSize(innerWidth,innerHeight); renderer.outputEncoding = THREE.sRGBEncoding;
+      if(renderer.xr){ renderer.xr.enabled=true; renderer.xr.setReferenceSpaceType('local-floor'); }
+      els.app.appendChild(renderer.domElement);
+
+      world = new THREE.Group(); scene.add(world); chamber = new THREE.Group(); chamber.position.set(0,1.48,-2.35); world.add(chamber);
+      scene.add(new THREE.HemisphereLight(0xbfdfff,0x050810,.86));
+      const l1 = new THREE.PointLight(0x64eaff,2.2,8); l1.position.set(-1.4,1.8,-1.6); scene.add(l1);
+      const l2 = new THREE.PointLight(0xb58cff,1.6,9); l2.position.set(1.5,1.0,-3.2); scene.add(l2);
+      floor = createFloor(); world.add(floor); bloom=createBloom(); chamber.add(bloom.object); ribbons=createRibbons(); chamber.add(ribbons.object); halo=createHalo(); world.add(halo.object); mist=createMist(); world.add(mist.object); core=createCore(); chamber.add(core.object);
+      createControllers();
+      bindSceneInput();
+      updateVRButtonState();
+      renderer.setAnimationLoop(animate);
+      state.sceneReady=true; resetView(true);
+      status('Ready. Bassdrive is selected. Press Play audio, or choose the generated pulse synth if the stream is blocked.');
+    }
+
+    function createFloor(){
+      const group=new THREE.Group(); const mat=new THREE.LineBasicMaterial({color:0x21465e,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false});
+      for(let i=1;i<=6;i++){ const pts=[]; for(let a=0;a<=128;a++){ const ang=a/128*Math.PI*2, r=i*.72; pts.push(new THREE.Vector3(Math.cos(ang)*r,.01,Math.sin(ang)*r-1.4)); } const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat.clone()); line.material.opacity=.18/i+.035; group.add(line); }
+      const grid=new THREE.GridHelper(9,28,0x19506a,0x0e2230); grid.position.z=-1.4; grid.material.transparent=true; grid.material.opacity=.16; grid.material.depthWrite=false; group.add(grid); return group;
+    }
+
+    function createBloom(){
+      const rings=22, steps=132, seg=rings*steps, pos=new Float32Array(seg*6), col=new Float32Array(seg*6); const geom=new THREE.BufferGeometry(); geom.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage)); geom.setAttribute('color',new THREE.BufferAttribute(col,3).setUsage(THREE.DynamicDrawUsage)); const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.65,blending:THREE.AdditiveBlending,depthWrite:false}); const obj=new THREE.LineSegments(geom,mat); const temp=new THREE.Color();
+      function point(r,i,t,audio){ const u=i/steps, an=u*Math.PI*2, rn=r/(rings-1), petals=5+Math.floor(rn*7), open=.72+audio.bass*.34+state.surge*.28, fold=.36+state.drive*.8+audio.mid*.42, rad=(.34+rn*1.42)*open, pet=1+Math.sin(an*petals+t*(.38+state.drive*.38)+r*.42)*(.08+fold*.08), braid=Math.sin(an*3-t*.27+r*.91)*(.18+audio.high*.24), rip=Math.sin(an*11+t*1.2+r)*audio.beat*(.09+state.drive*.08), x=Math.cos(an+braid*.28)*rad*pet, y=Math.sin(an*2+r*.33+t*.12)*(.18+rn*.34)+Math.sin(an*petals+t*.55)*.055+rip, z=Math.sin(an+braid)*rad*(.42+rn*.14)+Math.cos(an*2+t*.33+r)*.13, tw=t*(.10+state.drive*.18)+rn*Math.PI*.66, ct=Math.cos(tw), st=Math.sin(tw); return [x*ct-z*st,y,x*st+z*ct]; }
+      function update(t,audio){ let p=0,c=0; for(let r=0;r<rings;r++){ for(let i=0;i<steps;i++){ const a=point(r,i,t,audio), b=point(r,i+1,t,audio); pos[p++]=a[0];pos[p++]=a[1];pos[p++]=a[2];pos[p++]=b[0];pos[p++]=b[1];pos[p++]=b[2]; const rn=r/(rings-1); temp.copy(palette.cyan).lerp(palette.violet,rn); if((r+i)%5===0) temp.lerp(palette.acid,.25+audio.high*.35); if(audio.beat>.42) temp.lerp(palette.pink,audio.beat*.22); temp.multiplyScalar(.34+state.brightness*.68+audio.level*.36+state.surge*.25); col[c++]=temp.r;col[c++]=temp.g;col[c++]=temp.b;col[c++]=temp.r;col[c++]=temp.g;col[c++]=temp.b; }} geom.attributes.position.needsUpdate=true; geom.attributes.color.needsUpdate=true; mat.opacity=.36+state.brightness*.32+audio.level*.18; obj.scale.setScalar(.82+audio.bass*.13+state.surge*.11); obj.rotation.y+=.0006+state.drive*.0016; }
+      return {object:obj,update};
+    }
+
+    function createRibbons(){
+      const obj=new THREE.Group(), parts=[], count=4, steps=92, tmp=new THREE.Color();
+      for(let r=0;r<count;r++){ const pos=new Float32Array(steps*6), col=new Float32Array(steps*6), geom=new THREE.BufferGeometry(), idx=[]; for(let i=0;i<steps-1;i++){ const a=i*2,b=i*2+1,c=i*2+2,d=i*2+3; idx.push(a,b,c,b,d,c); } geom.setIndex(idx); geom.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage)); geom.setAttribute('color',new THREE.BufferAttribute(col,3).setUsage(THREE.DynamicDrawUsage)); const mat=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.17,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}); const mesh=new THREE.Mesh(geom,mat); obj.add(mesh); parts.push({pos,col,geom,mat,phase:r*Math.PI*2/count}); }
+      function update(t,audio){ parts.forEach((rib,ri)=>{ let p=0,c=0, side=ri%2===0?1:-1, phase=rib.phase+t*(.075+state.drive*.075), width=.055+audio.mid*.055+state.surge*.035; for(let i=0;i<steps;i++){ const u=i/(steps-1), th=u*Math.PI*1.7+phase, rad=1.15+ri*.26+Math.sin(u*Math.PI*4+t*.42+ri)*(.12+audio.mid*.18), x=Math.cos(th+side*.65)*rad, z=Math.sin(th+side*.65)*rad*.72+.15*Math.sin(u*8+t), y=(u-.5)*2.25+Math.sin(th*2+t*.5)*(.22+audio.bass*.18), nx=Math.cos(th+Math.PI/2), nz=Math.sin(th+Math.PI/2), wob=Math.sin(u*Math.PI*12+t*1.2+ri)*(.025+audio.high*.045); rib.pos[p++]=x+nx*(width+wob);rib.pos[p++]=y;rib.pos[p++]=z+nz*(width+wob);rib.pos[p++]=x-nx*(width+wob);rib.pos[p++]=y;rib.pos[p++]=z-nz*(width+wob); tmp.copy(ri%2?palette.violet:palette.cyan).lerp(ri%2?palette.pink:palette.acid,u*.65+audio.high*.25).multiplyScalar(.35+state.brightness*.52+audio.level*.24); rib.col[c++]=tmp.r;rib.col[c++]=tmp.g;rib.col[c++]=tmp.b;rib.col[c++]=tmp.r;rib.col[c++]=tmp.g;rib.col[c++]=tmp.b; } rib.geom.attributes.position.needsUpdate=true; rib.geom.attributes.color.needsUpdate=true; rib.mat.opacity=.07+state.brightness*.13+audio.mid*.08; }); obj.rotation.y=Math.sin(t*.09)*.1; }
+      return {object:obj,update};
+    }
+
+    function createHalo(){ const group=new THREE.Group(); group.position.set(0,.055,-1.35); const rings=[]; for(let i=0;i<7;i++){ const pts=[]; for(let s=0;s<=192;s++){ const a=s/192*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a))); } const geom=new THREE.BufferGeometry().setFromPoints(pts), mat=new THREE.LineBasicMaterial({color:i%2?0xb58cff:0x64eaff,transparent:true,opacity:.11,blending:THREE.AdditiveBlending,depthWrite:false}), line=new THREE.Line(geom,mat); line.scale.setScalar(.7+i*.38); group.add(line); rings.push(line); } return {object:group,update(t,a){ rings.forEach((r,i)=>{ const s=.75+i*.38+a.bass*(.08+i*.018)+state.surge*.09; r.scale.set(s,1,s); r.rotation.y=t*(.05+i*.008)*(i%2?1:-1); r.material.opacity=.035+state.brightness*.10/(i+1)+a.beat*.065; }); }}; }
+
+    function createMist(){ const count=900, pos=new Float32Array(count*3), col=new Float32Array(count*3), seeds=[]; for(let i=0;i<count;i++){ const rr=Math.sqrt(Math.random())*5.5, an=Math.random()*Math.PI*2; pos[i*3]=Math.cos(an)*rr; pos[i*3+1]=Math.random()*3.4-.15; pos[i*3+2]=Math.sin(an)*rr-2.2; seeds.push(Math.random()*1000); const cc=new THREE.Color().copy(i%3===0?palette.acid:i%3===1?palette.cyan:palette.violet).multiplyScalar(.55); col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b; } const geom=new THREE.BufferGeometry(); geom.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage)); geom.setAttribute('color',new THREE.BufferAttribute(col,3)); const mat=new THREE.PointsMaterial({size:.026,vertexColors:true,transparent:true,opacity:.54,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}); const obj=new THREE.Points(geom,mat); return {object:obj,update(t,a){ for(let i=0;i<count;i++){ const k=i*3, s=seeds[i]; pos[k+1]+=Math.sin(t*.3+s)*.0008+(.0008+a.high*.002); if(pos[k+1]>3.5) pos[k+1]=-.2; pos[k]+=Math.sin(t*.16+s)*.0015*(.5+state.drive); pos[k+2]+=Math.cos(t*.13+s)*.0013*(.5+state.drive); } geom.attributes.position.needsUpdate=true; mat.opacity=.24+state.brightness*.32+a.high*.14; mat.size=.018+state.brightness*.018+a.high*.018; }}; }
+
+    function createCore(){ const geom=new THREE.IcosahedronGeometry(.22,2), mat=new THREE.MeshBasicMaterial({color:0xf4fbff,transparent:true,opacity:.44,blending:THREE.AdditiveBlending,wireframe:true,depthWrite:false}), obj=new THREE.Mesh(geom,mat); return {object:obj,update(t,a){ obj.scale.setScalar(1+a.bass*.45+state.surge*.35); obj.rotation.x=t*.25; obj.rotation.y=t*.18; mat.opacity=.22+state.brightness*.32+a.beat*.26; }}; }
+
+    function createControllers(){ if(!renderer || !renderer.xr) return; for(let i=0;i<2;i++){ const c=renderer.xr.getController(i); c.addEventListener('selectstart',()=>{ state.surge=Math.min(1,state.surge+.6); toast('surge'); }); c.addEventListener('squeezestart',()=>resetView(true)); const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1.8)]), m=new THREE.LineBasicMaterial({color:i?0xb9ff69:0x64eaff,transparent:true,opacity:.65}); const ray=new THREE.Line(g,m); c.add(ray); scene.add(c); controllers.push(c); } if(renderer.xr.addEventListener){ renderer.xr.addEventListener('sessionstart',()=>{ state.xrActive=true; hideHome(); status('VR active. Trigger = surge, grip = recenter, B/Y = exit.'); }); renderer.xr.addEventListener('sessionend',()=>{ state.xrActive=false; showHome(); status('VR session ended. Desktop fallback remains active.'); }); } }
+
+    async function updateVRButtonState(){ if(!navigator.xr || !renderer || !renderer.xr){ els.enterVR.textContent='VR unavailable in this browser'; els.enterVR.disabled=false; return; } try{ const ok=await navigator.xr.isSessionSupported('immersive-vr'); els.enterVR.textContent=ok?'Enter VR':'VR not detected here'; }catch(e){ els.enterVR.textContent='VR unavailable here'; } }
+
+    async function enterVR(){ if(!navigator.xr || !renderer || !renderer.xr){ status('This browser does not expose WebXR VR. On Windows Chrome this is normal. Open the GitHub Pages URL in Meta Quest Browser.'); toast('VR unavailable here'); return; } try{ const session=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']}); await renderer.xr.setSession(session); hideHome(); }catch(err){ console.warn(err); status('VR could not start here. Desktop mode still works. Use Meta Quest Browser for the VR session.'); toast('VR blocked'); } }
+
+    function resetView(silent){ state.pointer.yaw=0; state.pointer.pitch=0; state.pointer.distance=4.25; if(world){ world.rotation.set(0,0,0); camera.position.set(0,1.58,4.25); camera.lookAt(0,1.45,-2.2); } if(!silent) toast('view reset'); }
+
+    function bindSceneInput(){ renderer.domElement.addEventListener('pointerdown',e=>{ state.pointer.down=true; state.pointer.lastX=e.clientX; state.pointer.lastY=e.clientY; hideHome(); renderer.domElement.setPointerCapture?.(e.pointerId); }); renderer.domElement.addEventListener('pointermove',e=>{ if(!state.pointer.down) return; const dx=e.clientX-state.pointer.lastX, dy=e.clientY-state.pointer.lastY; state.pointer.lastX=e.clientX; state.pointer.lastY=e.clientY; state.pointer.yaw-=dx*.0042; state.pointer.pitch=clamp(state.pointer.pitch-dy*.0035,-.55,.55); }); renderer.domElement.addEventListener('pointerup',e=>{ state.pointer.down=false; try{renderer.domElement.releasePointerCapture(e.pointerId)}catch(_){}}); renderer.domElement.addEventListener('wheel',e=>{ e.preventDefault(); state.pointer.distance=clamp(state.pointer.distance+e.deltaY*.0022,2.3,8); hideHome(); },{passive:false}); window.addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }); }
+
+    function pollXRButtons(){ if(!state.xrActive || !renderer || !renderer.xr) return; const session=renderer.xr.getSession && renderer.xr.getSession(); if(!session) return; for(const source of session.inputSources){ const gp=source.gamepad; if(!gp || !gp.buttons) continue; const hand=source.handedness||'hand'; gp.buttons.forEach((btn,i)=>{ const key=hand+':'+i, prev=state[key]||false, now=btn.pressed; if(now && !prev){ if(i===5 || i===4){ session.end().catch(()=>{}); } if(i===3){ resetView(false); } } state[key]=now; }); } }
+
+    function updateAudio(t){ state.drive=Number(els.drive.value)/100; state.brightness=Number(els.brightness.value)/100; const bpm=clamp(Number(els.bpm.value)||174,80,220), phase=(t*bpm/60)%1, kick=Math.pow(Math.max(0,Math.sin(phase*Math.PI)),13), snare=Math.pow(Math.max(0,Math.sin(((phase+.5)%1)*Math.PI)),15)*.58, shuffle=Math.pow(Math.max(0,Math.sin((phase*2.0+.18)*Math.PI)),18)*.34, synthBeat=clamp(kick+snare+shuffle,0,1); let bass=0,mid=0,high=0,level=0,valid=false;
+      if(state.analyser && !els.localAudio.paused && state.freqData){ state.analyser.getByteFrequencyData(state.freqData); const n=state.freqData.length; let b=0,m=0,h=0,bb=0,mm=0,hh=0; for(let i=0;i<n;i++){ const v=state.freqData[i]/255; if(i<n*.08){b+=v;bb++;} else if(i<n*.35){m+=v;mm++;} else {h+=v;hh++;} } bass=b/Math.max(1,bb); mid=m/Math.max(1,mm); high=h/Math.max(1,hh); level=(bass*1.9+mid+high*.5)/3.4; valid=level>.012 || bass>.018; }
+      state.analyserValid=valid; const target={ bass:valid?clamp(bass*2.3+synthBeat*.08,0,1):(.2+synthBeat*.82), mid:valid?clamp(mid*1.75,0,1):(.2+Math.sin(t*1.5)*.05+shuffle*.42), high:valid?clamp(high*1.7,0,1):(.16+Math.sin(t*6.4)*.035+snare*.48), level:valid?clamp(level*1.35,0,1):(.18+synthBeat*.55), beat:valid?clamp(bass*1.55+synthBeat*.20,0,1):synthBeat}; const sm=.075+state.drive*.06; state.pulse.bass=lerp(state.pulse.bass,target.bass,sm); state.pulse.mid=lerp(state.pulse.mid,target.mid,sm*.85); state.pulse.high=lerp(state.pulse.high,target.high,sm*.72); state.pulse.level=lerp(state.pulse.level,target.level,sm*.8); state.pulse.beat=lerp(state.pulse.beat,target.beat,.14+state.drive*.08); return state.pulse; }
+
+    async function ensureAudioContext(){ if(!state.audioCtx){ state.audioCtx=new (window.AudioContext||window.webkitAudioContext)(); } if(state.audioCtx.state==='suspended') await state.audioCtx.resume(); return state.audioCtx; }
+    async function ensureAnalyser(){ const ctx=await ensureAudioContext(); if(!state.analyser){ state.analyser=ctx.createAnalyser(); state.analyser.fftSize=1024; state.analyser.smoothingTimeConstant=.84; state.freqData=new Uint8Array(state.analyser.frequencyBinCount); } if(!state.sourceNode){ state.sourceNode=ctx.createMediaElementSource(els.localAudio); state.sourceNode.connect(state.analyser); state.analyser.connect(ctx.destination); } }
+
+    function stopSynth(){ if(state.synth){ try{ state.synth.timer && clearInterval(state.synth.timer); state.synth.gain.gain.cancelScheduledValues(0); state.synth.gain.disconnect(); }catch(e){} state.synth=null; } }
+    async function startSynth(){ const ctx=await ensureAudioContext(); stopSynth(); const master=ctx.createGain(); master.gain.value=volume()*.38; master.connect(ctx.destination); const bpm=()=>clamp(Number(els.bpm.value)||174,80,220); function hit(freq,dur,type,gain,when){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type; o.frequency.setValueAtTime(freq,when); o.frequency.exponentialRampToValueAtTime(Math.max(30,freq*.48),when+dur*.75); g.gain.setValueAtTime(0,when); g.gain.linearRampToValueAtTime(gain,when+.006); g.gain.exponentialRampToValueAtTime(.0001,when+dur); o.connect(g); g.connect(master); o.start(when); o.stop(when+dur+.04); }
+      function tick(){ const now=ctx.currentTime+.015; hit(84,.18,'sine',.85,now); hit(180,.07,'triangle',.22,now+60/bpm()/2); hit(520,.045,'square',.05,now+60/bpm()/4); }
+      tick(); const timer=setInterval(tick, Math.max(120,60000/bpm())); state.synth={gain:master,timer}; els.playBtn.textContent='Pause audio'; els.pauseBtn.textContent='Pause'; state.playing=true; status('Generated DnB pulse synth playing. This always works and drives the chamber.'); hideHome(); }
+
+    function stopAllAudio(){ els.radioAudio.pause(); els.localAudio.pause(); try{els.radioAudio.currentTime=0;}catch(e){} try{els.localAudio.currentTime=0;}catch(e){} stopSynth(); state.playing=false; els.playBtn.textContent='Play audio'; els.pauseBtn.textContent='Play'; }
+
+    async function playAudio(){ const src=els.sourceSelect.value; stopAllAudio(); if(src==='synth'){ await startSynth(); return; } if(src==='local'){ const file=els.fileInput.files && els.fileInput.files[0]; if(!file){ status('Choose a local audio file first, or switch to Bassdrive radio / generated synth.'); return; } if(state.localObjectUrl) URL.revokeObjectURL(state.localObjectUrl); state.localObjectUrl=URL.createObjectURL(file); els.localAudio.src=state.localObjectUrl; els.localAudio.volume=volume(); try{ await ensureAnalyser(); await els.localAudio.play(); state.playing=true; els.playBtn.textContent='Pause audio'; els.pauseBtn.textContent='Pause'; status('Local audio playing. This gives true frequency-reactive motion.'); hideHome(); }catch(err){ console.warn(err); status('Local file playback failed. Try another MP3/OGG/WAV or use generated synth.'); toast('audio failed'); } return; }
+      const url = src==='custom' ? (els.customUrl.value.trim() || RADIO_URLS[0]) : RADIO_URLS[state.radioIndex % RADIO_URLS.length]; els.radioAudio.src=url; els.radioAudio.volume=volume(); els.radioAudio.crossOrigin='anonymous'; status('Trying radio stream... if it is blocked, switch to generated synth.'); try{ await els.radioAudio.play(); state.playing=true; els.playBtn.textContent='Pause audio'; els.pauseBtn.textContent='Pause'; status('Radio stream playing. Visuals follow the DnB pulse estimate; use a local file for true analysis.'); hideHome(); }catch(err){ console.warn(err); state.radioIndex++; if(src==='radio' && state.radioIndex < RADIO_URLS.length){ status('First radio URL failed; trying backup stream...'); return playAudio(); } status('Radio stream was blocked or unreachable in this browser. Starting generated pulse synth instead.'); await startSynth(); } }
+
+    function pauseAudio(){ if(state.playing){ stopAllAudio(); status('Audio stopped. Press Play audio to start again.'); } else { playAudio(); } }
+
+    function bindUI(){ els.playBtn.addEventListener('click',()=> state.playing ? pauseAudio() : playAudio()); els.pauseBtn.addEventListener('click',pauseAudio); els.stopBtn.addEventListener('click',()=>{ stopAllAudio(); status('Audio stopped.'); }); els.resetBtn.addEventListener('click',()=>resetView(false)); els.resetViewBtn.addEventListener('click',()=>resetView(false)); els.showHomeBtn.addEventListener('click',showHome); els.focusBtn.addEventListener('click',hideHome); els.enterVR.addEventListener('click',enterVR); els.sourceSelect.addEventListener('change',()=>{ els.customWrap.style.display=els.sourceSelect.value==='custom'?'grid':'none'; els.fileWrap.style.display=els.sourceSelect.value==='local'?'grid':'none'; stopAllAudio(); status(els.sourceSelect.value==='radio'?'Bassdrive radio selected. Press Play audio.':els.sourceSelect.value==='local'?'Choose a local audio file, then press Play audio.':els.sourceSelect.value==='synth'?'Generated pulse synth selected. This always makes sound.':'Custom stream selected. Press Play audio.'); }); els.fileInput.addEventListener('change',()=>status('Local file loaded. Press Play audio.')); els.customUrl.addEventListener('change',()=>status('Custom stream URL set. Press Play audio.')); els.volume.addEventListener('input',()=>{ const v=volume(); els.volumeVal.textContent=els.volume.value+'%'; els.radioAudio.volume=v; els.localAudio.volume=v; if(state.synth) state.synth.gain.gain.value=v*.38; }); els.drive.addEventListener('input',()=>els.driveVal.textContent=els.drive.value); els.brightness.addEventListener('input',()=>els.brightnessVal.textContent=els.brightness.value); window.addEventListener('keydown',e=>{ const tag=document.activeElement?.tagName?.toLowerCase(); if(['input','select','textarea'].includes(tag)) return; if(e.key==='Escape') showHome(); if(e.key.toLowerCase()==='h') state.homeVisible?hideHome():showHome(); if(e.key===' '){ e.preventDefault(); pauseAudio(); } if(e.key.toLowerCase()==='r') resetView(false); if(e.key.toLowerCase()==='s'){ state.surge=Math.min(1,state.surge+.65); toast('surge'); } }); }
+
+    function animate(now){ const t=now/1000, dt=Math.min(.05,(now-lastTime)/1000||.016); lastTime=now; const a=updateAudio(t); state.surge=lerp(state.surge,0,.025); if(state.sceneReady){ bloom.update(t,a); ribbons.update(t,a); halo.update(t,a); mist.update(t,a); core.update(t,a); if(!state.xrActive){ camera.position.x=Math.sin(state.pointer.yaw)*state.pointer.distance; camera.position.z=Math.cos(state.pointer.yaw)*state.pointer.distance; camera.position.y=1.58+state.pointer.pitch*1.7; camera.lookAt(0,1.45,-2.25); } pollXRButtons(); renderer.render(scene,camera); } const ui=performance.now(); if(ui-state.lastUi>90){ els.meterBar.style.width=Math.round(clamp(a.level*116,4,100))+'%'; state.lastUi=ui; } }
+
+    bindUI(); initScene();
+  })();
+  </script>
+</body>
+</html>
